@@ -52,31 +52,19 @@ $(document).ready(() => {
       id: taskNumber++,
       createDOM() {
         $(".tasks").append(
-          `<div style='background-color:${this.color}' class='item${
-            this.id
-          }'><input type='checkbox' name='items' id=${
-            this.id
-          } onchange=${onCheck(this.id)}>${this.title}</div>`
+          `<div style='background-color:${this.color}' class='item${this.id}'><input type='checkbox' name='items' id='item${this.id}'>${this.title}</div>`
         );
+        $(`#item${this.id}`).on("change", () => {
+          if (this.checked == true) this.checked = false;
+          else this.checked = true;
+        });
         $(".task_title").val("");
         $(".radio_group").attr("hidden", false);
       }
     });
     task[task.length - 1].createDOM();
   };
-  //${onCheck(this.id)}
   //TODO Fix onCheck fucntion
-  function onCheck(id) {
-    //TODO Change every for loop in the code to map.filter,forEach e.t.c.
-    alert(id);
-
-    /*
-    for (let i = 0; i < task.length; i++)
-      if (id == task[i].id)
-        if (task[i].checked == true) task[i].checked = false;
-        else task[i].checked = true;
-        */
-  }
 
   function changeColors(color) {
     $(`.color_buttons #${color}`).on("click", () => {
@@ -96,6 +84,7 @@ $(document).ready(() => {
   });
 
   $(".delete_task").on("click", () => {
+    /*
     $(`input:checkbox[name=items]:checked`).each(() => {
       for (let i = 0; i < task.length; i++)
         if (task[i].id == $(this).attr("id")) {
@@ -103,6 +92,7 @@ $(document).ready(() => {
           task.splice(i, 1);
         }
     });
+    */
 
     if (!task[0]) $(`.radio_group`).attr("hidden", true);
   });
