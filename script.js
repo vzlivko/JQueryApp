@@ -73,10 +73,10 @@ $(document).ready(() => {
 
   function changeColors(color) {
     $(".color_buttons #" + color).on("click", () => {
-      $("input:checkbox[name=items]:checked").each(() => {
+      $("input:checkbox[name=items]:checked").each((index, item) => {
         for (let i = 0; i < task.length; i++)
-          if (task[i].id == $(this).attr("id") && (task[i].checked = true)) {
-            $("div." + $(this).attr("id")).css("background-color", color);
+          if (task[i].id == item.id) {
+            $("div." + item.id).css("background-color", color);
             task[i].color = color;
           }
       });
