@@ -3,8 +3,7 @@
 $(document).ready(() => {
   let task = [];
   let taskNumber = 0;
-  let count = 0;
-  const colors = ["red", "orange", "yellow", "green", "cyan", "blue", "purple"];
+  const COLORS = ["red", "orange", "yellow", "green", "cyan", "blue", "purple"];
 
   $(".color_buttons").append(
     `<button id='red'> Red</button >
@@ -25,105 +24,123 @@ $(document).ready(() => {
       <input type='radio' name='categories' id='active'>Active</input>
       <input type='radio' name='categories' id='completed'>Completed</input>`
   );
-  //TODO change every + to ``
-  $("#all").on("change", () => {
-    $("input:checkbox[name=items]").each((index, item) => {
-      $(`div.${item.id}`).attr("hidden", false);
-    });
-  });
-  $("#active").on("change", () => {
-    $("input:checkbox[name=items]").each((index, item) => {
-      if (item.checked) $(`div.${item.id}`).attr("hidden", true);
-      else $(`div.${item.id}`).attr("hidden", false);
-    });
-  });
-  $("#completed").on("change", () => {
-    $("input:checkbox[name=items]").each((index, item) => {
-      if (item.checked) $(`div.${item.id}`).attr("hidden", false);
-      else $(`div.${item.id}`).attr("hidden", true);
-    });
-  });
 
   const tasks = function createNewTask(title) {
     task.push({
       title: title,
-      color: colors[Math.round(Math.random() * 6)],
+      color: COLORS[Math.round(Math.random() * 6)],
       checked: false,
-      id: taskNumber++,
+      id: "item" + taskNumber++,
       createDOM() {
         $(".tasks").append(
-          `<div style='background-color:${this.color}' class='item${this.id}'><input type='checkbox' name='items' id='item${this.id}'>${this.title}</div>`
+          `<div style='background-color:${this.color}' class='${this.id}'><input type='checkbox' name='items' id='${this.id}'><span id='${this.id}'>${this.title}</span><button id='delete${this.id}'>X</div>`
         );
-        $(`#item${this.id}`).on("change", () => {
-          if (this.checked == true) this.checked = false;
-          else this.checked = true;
+        $(`#delete${this.id}`).on("click", () => {
+          task = task.filter(item => {
+            if (item.id == this.id) item.deleteDOM();
+            else return item;
+          });
+          if (!task.length) $(`.radio_group`).attr("hidden", true);
+        });
+        if ($("#completed").attr("checked"))
+          $(`div.${this.id}`).attr("hidden", true);
+        $(`#${this.id}`).on("change", () => {
+          this.checked = !this.checked;
+          if (this.checked) this.lineThroughTextAndFilter("line-through", true);
+          else this.lineThroughTextAndFilter("none", false);
         });
         $(".task_title").val("");
         $(".radio_group").attr("hidden", false);
+      },
+      deleteDOM() {
+        $(`div.${this.id}`).remove();
+      },
+      changeTitle(title) {
+        this.title = title;
+        $(`span#${this.id}`).text(title);
+      },
+      changeColor(color) {
+        this.color = color;
+        $(`div.${this.id}`).css("background-color", color);
+      },
+      lineThroughTextAndFilter(textDecoration, hidden) {
+        $(`span#${this.id}`).css("text-decoration", textDecoration);
+        if ($(`#active`).attr("checked"))
+          $(`div.${this.id}`).attr("hidden", hidden);
+        if ($(`#completed`).attr("checked"))
+          $(`div.${this.id}`).attr("hidden", !hidden);
       }
     });
     task[task.length - 1].createDOM();
   };
-  //TODO Fix onCheck fucntion
 
-  function changeColors(color) {
+  function colorButtonClick(color) {
     $(`.color_buttons #${color}`).on("click", () => {
-      $(`input:checkbox[name=items]:checked`).each((index, item) => {
-        for (let i = 0; i < task.length; i++)
-          if (task[i].id == item.id) {
-            $(`div.${item.id}`).css("background-color", color);
-            task[i].color = color;
-          }
+      task = task.map(item => {
+        if (item.checked) item.changeColor(color);
+        return item;
       });
     });
   }
+  for (let i = 0; i < COLORS.length; i++) colorButtonClick(COLORS[i]);
 
-  $(".add_task").on("click", () => {
+  function addTask() {
     if ($(`.task_title`).val() != "") tasks($(`.task_title`).val());
     else alert("Enter title");
+  }
+
+  function changeFilter(item, hidden) {
+    if (item.checked) $(`div.${item.id}`).attr("hidden", hidden);
+    else $(`div.${item.id}`).attr("hidden", !hidden);
+  }
+
+  $("#all").on("change", () => {
+    task.forEach(item => {
+      $(`div.${item.id}`).attr("hidden", false);
+    });
   });
 
-  $(".delete_task").on("click", () => {
-    /*
-    $(`input:checkbox[name=items]:checked`).each(() => {
-      for (let i = 0; i < task.length; i++)
-        if (task[i].id == $(this).attr("id")) {
-          $(`div.${this.attr("id")}`).remove();
-          task.splice(i, 1);
-        }
-    });
-    */
+  $("#active").on("change", () => {
+    task.forEach(item => changeFilter(item, true));
+  });
 
-    if (!task[0]) $(`.radio_group`).attr("hidden", true);
+  $("#completed").on("change", () => {
+    task.forEach(item => changeFilter(item, false));
+  });
+
+  $(`.task_title`).on("keydown", key => {
+    if (key.which == 13) addTask();
+  });
+
+  $(".add_task").on("click", () => addTask());
+
+  $(".delete_task").on("click", () => {
+    let count = 0;
+    task = task.filter(item => {
+      if (item.checked) {
+        item.deleteDOM();
+        count += 1;
+      } else return item;
+    });
+    if (!count) alert("Choose tasks to delete");
+    if (!task.length) $(`.radio_group`).attr("hidden", true);
   });
 
   $(".edit_task").on("click", () => {
-    count = 0;
-    $(`input:checkbox[name=items]:checked`).each(() => {
-      count++;
+    let count = 0;
+    task.forEach(item => {
+      if (item.checked) count += 1;
     });
     if (count > 1) alert("Select no more than one item");
-    else if (count == 0) alert("Select item");
+    else if (!count) alert("Select item");
     else {
-      $(`input:checkbox[name=items]:checked`).each(() => {
-        let item = $(
-          `div span#${$("input:checkbox[name=items]:checked").attr("id")}`
-        );
-        if ($(`.task_title`).val() != "") {
-          item.text($(".task_title").val());
-          for (let i = 0; i < task.length; i++)
-            if (task[i].id == item.attr("id"))
-              task[i].title = $(`.task_title`).val();
-        } else alert("Enter title");
-      });
+      if ($(".task_title").val())
+        task = task.map(item => {
+          if (item.checked) item.changeTitle($(".task_title").val());
+          return item;
+        });
+      else alert("Enter new title for task");
     }
+    $(".task_title").val("");
   });
-  //TODO fix it
-  changeColors(colors[0]);
-  changeColors(colors[1]);
-  changeColors(colors[2]);
-  changeColors(colors[3]);
-  changeColors(colors[4]);
-  changeColors(colors[5]);
-  changeColors(colors[6]);
 });
