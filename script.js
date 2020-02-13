@@ -3,6 +3,7 @@
 $(document).ready(() => {
   let task = [];
   let taskNumber;
+  const ENTER_KEY = 13;
   const COLORS = ["red", "orange", "yellow", "green", "cyan", "blue", "purple"];
   //localStorage.clear();
 
@@ -10,10 +11,10 @@ $(document).ready(() => {
     taskNumber = localStorage.getItem("taskNumber");
   else {
     taskNumber = 0;
-    localStorage.setItem("taskNumber", taskNumber);
+    localStorage.setItem("taskNumber", 0);
   }
 
-  for (let i = 0; i < taskNumber; i++) {
+  for (let i = 0; i <= taskNumber; i++) {
     if (localStorage.getItem(`item${i}`)) {
       task.push(JSON.parse(localStorage.getItem(`item${i}`)));
       createDOM(task[task.length - 1]);
@@ -33,6 +34,7 @@ $(document).ready(() => {
   );
 
   const tasks = function createNewTask(title) {
+    localStorage.setItem("taskNumber", taskNumber);
     task.push({
       title: title,
       color: COLORS[Math.round(Math.random() * 6)],
@@ -40,16 +42,15 @@ $(document).ready(() => {
       id: "item" + taskNumber++
     });
     createDOM(task[task.length - 1]);
-    localStorage.setItem("taskNumber", taskNumber);
     localStorage.setItem(
-      `item${taskNumber}`,
+      `item${taskNumber - 1}`,
       JSON.stringify(task[task.length - 1])
     );
   };
 
   function createDOM(newItem) {
     $(".tasks").append(
-      `<div style='background-color:${newItem.color}' class='${newItem.id}'><input type='checkbox' name='items' id='${newItem.id}'><span id='${newItem.id}'>${newItem.title}</span><button id='delete${newItem.id}'>X</div>`
+      `<div style='background-color:${newItem.color}' class='${newItem.id}'><input type='checkbox' checked=${newItem.checked} name='items' id='${newItem.id}'><span id='${newItem.id}'>${newItem.title}</span><button id='delete${newItem.id}'>X</div>`
     );
     $(`#delete${newItem.id}`).on("click", () => {
       task = task.filter(item => {
@@ -64,7 +65,8 @@ $(document).ready(() => {
       newItem.checked = !newItem.checked;
       if (newItem.checked)
         lineThroughTextAndFilter(newItem.id, "line-through", true);
-      else lineThroughTextAndFilter("none", false);
+      else lineThroughTextAndFilter(newItem.id, "none", false);
+      localStorage.setItem(`${newItem.id}`, JSON.stringify(newItem));
     });
     $(".task_title").val("");
     $(".radio_group").attr("hidden", false);
@@ -78,11 +80,13 @@ $(document).ready(() => {
   function changeTitle(item, title) {
     item.title = title;
     $(`span#${item.id}`).text(title);
+    localStorage.setItem(`${item.id}`, JSON.stringify(item));
   }
 
   function changeColor(item, color) {
     item.color = color;
     $(`div.${item.id}`).css("background-color", color);
+    localStorage.setItem(`${item.id}`, JSON.stringify(item));
   }
 
   function lineThroughTextAndFilter(id, textDecoration, hidden) {
@@ -134,7 +138,7 @@ $(document).ready(() => {
   });
 
   $(`.task_title`).on("keydown", key => {
-    if (key.which == 13) addTask();
+    if (key.which == ENTER_KEY) addTask();
   });
 
   $(".add_task").on("click", () => addTask());
@@ -168,8 +172,5 @@ $(document).ready(() => {
       else alert("Enter new title for task");
     }
     $(".task_title").val("");
-  });
-  $(`#btn`).on("click", () => {
-    localStorage.removeItem("item0");
   });
 });
