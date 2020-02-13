@@ -2,18 +2,25 @@
 
 $(document).ready(() => {
   let task = [];
-  let taskNumber = 0;
+  let taskNumber;
   const COLORS = ["red", "orange", "yellow", "green", "cyan", "blue", "purple"];
+  //localStorage.clear();
 
-  $(".color_buttons").append(
-    `<button id='red'> Red</button >
-      <button id='orange'>Orange</button>
-      <button id='yellow'>Yellow</button>
-      <button id='green'>Green</button> 
-      <button id='cyan'>Cyan</button>
-      <button id='blue'>Blue</button>
-      <button id='purple'>Purple</button></div >`
-  );
+  if (localStorage.getItem("taskNumber") != null)
+    taskNumber = localStorage.getItem("taskNumber");
+  else {
+    taskNumber = 0;
+    localStorage.setItem("taskNumber", taskNumber);
+  }
+
+  for (let i = 0; i < taskNumber; i++) {
+    if (localStorage.getItem(`item${i}`)) {
+      task.push(JSON.parse(localStorage.getItem(`item${i}`)));
+      createDOM(task[task.length - 1]);
+    }
+  }
+
+  $(".color_buttons").append(creatingColorButtons());
   $(".control_buttons").append(
     `<button class='add_task'> Add</button >
       <button class='delete_task'>Delete</button>
@@ -30,54 +37,72 @@ $(document).ready(() => {
       title: title,
       color: COLORS[Math.round(Math.random() * 6)],
       checked: false,
-      id: "item" + taskNumber++,
-      createDOM() {
-        $(".tasks").append(
-          `<div style='background-color:${this.color}' class='${this.id}'><input type='checkbox' name='items' id='${this.id}'><span id='${this.id}'>${this.title}</span><button id='delete${this.id}'>X</div>`
-        );
-        $(`#delete${this.id}`).on("click", () => {
-          task = task.filter(item => {
-            if (item.id == this.id) item.deleteDOM();
-            else return item;
-          });
-          if (!task.length) $(`.radio_group`).attr("hidden", true);
-        });
-        if ($("#completed").attr("checked"))
-          $(`div.${this.id}`).attr("hidden", true);
-        $(`#${this.id}`).on("change", () => {
-          this.checked = !this.checked;
-          if (this.checked) this.lineThroughTextAndFilter("line-through", true);
-          else this.lineThroughTextAndFilter("none", false);
-        });
-        $(".task_title").val("");
-        $(".radio_group").attr("hidden", false);
-      },
-      deleteDOM() {
-        $(`div.${this.id}`).remove();
-      },
-      changeTitle(title) {
-        this.title = title;
-        $(`span#${this.id}`).text(title);
-      },
-      changeColor(color) {
-        this.color = color;
-        $(`div.${this.id}`).css("background-color", color);
-      },
-      lineThroughTextAndFilter(textDecoration, hidden) {
-        $(`span#${this.id}`).css("text-decoration", textDecoration);
-        if ($(`#active`).attr("checked"))
-          $(`div.${this.id}`).attr("hidden", hidden);
-        if ($(`#completed`).attr("checked"))
-          $(`div.${this.id}`).attr("hidden", !hidden);
-      }
+      id: "item" + taskNumber++
     });
-    task[task.length - 1].createDOM();
+    createDOM(task[task.length - 1]);
+    localStorage.setItem("taskNumber", taskNumber);
+    localStorage.setItem(
+      `item${taskNumber}`,
+      JSON.stringify(task[task.length - 1])
+    );
   };
+
+  function createDOM(newItem) {
+    $(".tasks").append(
+      `<div style='background-color:${newItem.color}' class='${newItem.id}'><input type='checkbox' name='items' id='${newItem.id}'><span id='${newItem.id}'>${newItem.title}</span><button id='delete${newItem.id}'>X</div>`
+    );
+    $(`#delete${newItem.id}`).on("click", () => {
+      task = task.filter(item => {
+        if (item.id == newItem.id) deleteDOM(newItem.id);
+        else return item;
+      });
+      if (!task.length) $(`.radio_group`).attr("hidden", true);
+    });
+    if ($("#completed").attr("checked"))
+      $(`div.${newItem.id}`).attr("hidden", true);
+    $(`#${newItem.id}`).on("change", () => {
+      newItem.checked = !newItem.checked;
+      if (newItem.checked)
+        lineThroughTextAndFilter(newItem.id, "line-through", true);
+      else lineThroughTextAndFilter("none", false);
+    });
+    $(".task_title").val("");
+    $(".radio_group").attr("hidden", false);
+  }
+
+  function deleteDOM(id) {
+    $(`div.${id}`).remove();
+    localStorage.removeItem(id);
+  }
+
+  function changeTitle(item, title) {
+    item.title = title;
+    $(`span#${item.id}`).text(title);
+  }
+
+  function changeColor(item, color) {
+    item.color = color;
+    $(`div.${item.id}`).css("background-color", color);
+  }
+
+  function lineThroughTextAndFilter(id, textDecoration, hidden) {
+    $(`span#${id}`).css("text-decoration", textDecoration);
+    if ($(`#active`).attr("checked")) $(`div.${id}`).attr("hidden", hidden);
+    if ($(`#completed`).attr("checked")) $(`div.${id}`).attr("hidden", !hidden);
+  }
+
+  function creatingColorButtons() {
+    let htmlString = ``;
+    COLORS.forEach(item => {
+      htmlString += `<button id='${item}'>${item}</button >`;
+    });
+    return htmlString;
+  }
 
   function colorButtonClick(color) {
     $(`.color_buttons #${color}`).on("click", () => {
       task = task.map(item => {
-        if (item.checked) item.changeColor(color);
+        if (item.checked) changeColor(item, color);
         return item;
       });
     });
@@ -115,14 +140,15 @@ $(document).ready(() => {
   $(".add_task").on("click", () => addTask());
 
   $(".delete_task").on("click", () => {
-    let count = 0;
+    let selected = false;
+
     task = task.filter(item => {
       if (item.checked) {
-        item.deleteDOM();
-        count += 1;
+        deleteDOM(item.id);
+        selected = true;
       } else return item;
     });
-    if (!count) alert("Choose tasks to delete");
+    if (!selected) alert("Choose tasks to delete");
     if (!task.length) $(`.radio_group`).attr("hidden", true);
   });
 
@@ -136,11 +162,14 @@ $(document).ready(() => {
     else {
       if ($(".task_title").val())
         task = task.map(item => {
-          if (item.checked) item.changeTitle($(".task_title").val());
+          if (item.checked) changeTitle(item, $(".task_title").val());
           return item;
         });
       else alert("Enter new title for task");
     }
     $(".task_title").val("");
+  });
+  $(`#btn`).on("click", () => {
+    localStorage.removeItem("item0");
   });
 });
