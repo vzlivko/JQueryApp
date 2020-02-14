@@ -5,27 +5,26 @@ $(document).ready(() => {
   let taskNumber;
   const ENTER_KEY = 13;
   const COLORS = ["red", "orange", "yellow", "green", "cyan", "blue", "purple"];
-  //localStorage.clear();
 
-  if (localStorage.getItem("taskNumber") != null)
+  if (localStorage.getItem("taskNumber") != null) {
     taskNumber = localStorage.getItem("taskNumber");
-  else {
+    for (let i = 0; i < taskNumber; i++) {
+      if (localStorage.getItem(`item${i}`)) {
+        task.push(JSON.parse(localStorage.getItem(`item${i}`)));
+        createDOM(task[task.length - 1]);
+      }
+    }
+  } else {
     taskNumber = 0;
     localStorage.setItem("taskNumber", 0);
-  }
-
-  for (let i = 0; i <= taskNumber; i++) {
-    if (localStorage.getItem(`item${i}`)) {
-      task.push(JSON.parse(localStorage.getItem(`item${i}`)));
-      createDOM(task[task.length - 1]);
-    }
   }
 
   $(".color_buttons").append(creatingColorButtons());
   $(".control_buttons").append(
     `<button class='add_task'> Add</button >
       <button class='delete_task'>Delete</button>
-      <button class='edit_task'>Edit</button>`
+      <button class='select_all'>Select all tasks</button>
+      <button class='unselect_all'>Unselect all tasks</button>`
   );
   $(".radio_group").append(
     `<input type='radio' name='categories' id='all' checked>All</input>
@@ -34,24 +33,46 @@ $(document).ready(() => {
   );
 
   const tasks = function createNewTask(title) {
-    localStorage.setItem("taskNumber", taskNumber);
     task.push({
       title: title,
       color: COLORS[Math.round(Math.random() * 6)],
       checked: false,
       id: "item" + taskNumber++
     });
+    localStorage.setItem("taskNumber", taskNumber);
     createDOM(task[task.length - 1]);
     localStorage.setItem(
-      `item${taskNumber - 1}`,
+      `${task[task.length - 1].id}`,
       JSON.stringify(task[task.length - 1])
     );
   };
 
+  function lineThrough(item) {
+    if (item.checked) lineThroughTextAndFilter(item.id, "line-through", true);
+    else lineThroughTextAndFilter(item.id, "none", false);
+  }
+
   function createDOM(newItem) {
     $(".tasks").append(
-      `<div style='background-color:${newItem.color}' class='${newItem.id}'><input type='checkbox' checked=${newItem.checked} name='items' id='${newItem.id}'><span id='${newItem.id}'>${newItem.title}</span><button id='delete${newItem.id}'>X</div>`
+      `<div style='background-color:${newItem.color}' class='${newItem.id}'><input type='checkbox' name='items' id='${newItem.id}'><span id='${newItem.id}'>${newItem.title}</span><button id='delete${newItem.id}'>X</div>`
     );
+    $(".tasks").on("dblclick", `span#${newItem.id}`, item => {
+      let id = item.target.id;
+      $(`span#${id}`).replaceWith(`<input type='text' id='${id}'>`);
+      $(`input[type=text]#${id}`).on("keydown", key => {
+        if (key.which == ENTER_KEY) {
+          let title = $(`input[type=text]#${id}`).val();
+          $(`input[type=text]#${id}`).replaceWith(`<span id='${id}'></span>`);
+          let taskItem = task.find(element => {
+            if (element.id == id) return element;
+          });
+          changeTitle(taskItem, title);
+          lineThrough(taskItem);
+        }
+      });
+    });
+    $(`#${newItem.id}`).prop("checked", newItem.checked);
+    lineThrough(newItem);
     $(`#delete${newItem.id}`).on("click", () => {
       task = task.filter(item => {
         if (item.id == newItem.id) deleteDOM(newItem.id);
@@ -63,9 +84,8 @@ $(document).ready(() => {
       $(`div.${newItem.id}`).attr("hidden", true);
     $(`#${newItem.id}`).on("change", () => {
       newItem.checked = !newItem.checked;
-      if (newItem.checked)
-        lineThroughTextAndFilter(newItem.id, "line-through", true);
-      else lineThroughTextAndFilter(newItem.id, "none", false);
+      $(`#${newItem.id}`).prop("checked", newItem.checked);
+      lineThrough(newItem);
       localStorage.setItem(`${newItem.id}`, JSON.stringify(newItem));
     });
     $(".task_title").val("");
@@ -103,15 +123,14 @@ $(document).ready(() => {
     return htmlString;
   }
 
-  function colorButtonClick(color) {
+  COLORS.forEach(color => {
     $(`.color_buttons #${color}`).on("click", () => {
       task = task.map(item => {
         if (item.checked) changeColor(item, color);
         return item;
       });
     });
-  }
-  for (let i = 0; i < COLORS.length; i++) colorButtonClick(COLORS[i]);
+  });
 
   function addTask() {
     if ($(`.task_title`).val() != "") tasks($(`.task_title`).val());
@@ -121,6 +140,16 @@ $(document).ready(() => {
   function changeFilter(item, hidden) {
     if (item.checked) $(`div.${item.id}`).attr("hidden", hidden);
     else $(`div.${item.id}`).attr("hidden", !hidden);
+  }
+
+  function changeAllChecks(checked) {
+    task.map(item => {
+      item.checked = checked;
+      $(`#${item.id}`).prop("checked", checked);
+      lineThrough(item);
+      localStorage.setItem(`${item.id}`, JSON.stringify(item));
+      return item;
+    });
   }
 
   $("#all").on("change", () => {
@@ -145,7 +174,6 @@ $(document).ready(() => {
 
   $(".delete_task").on("click", () => {
     let selected = false;
-
     task = task.filter(item => {
       if (item.checked) {
         deleteDOM(item.id);
@@ -156,21 +184,7 @@ $(document).ready(() => {
     if (!task.length) $(`.radio_group`).attr("hidden", true);
   });
 
-  $(".edit_task").on("click", () => {
-    let count = 0;
-    task.forEach(item => {
-      if (item.checked) count += 1;
-    });
-    if (count > 1) alert("Select no more than one item");
-    else if (!count) alert("Select item");
-    else {
-      if ($(".task_title").val())
-        task = task.map(item => {
-          if (item.checked) changeTitle(item, $(".task_title").val());
-          return item;
-        });
-      else alert("Enter new title for task");
-    }
-    $(".task_title").val("");
-  });
+  $(".select_all").on("click", () => changeAllChecks(true));
+
+  $(".unselect_all").on("click", () => changeAllChecks(false));
 });
