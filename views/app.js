@@ -24,7 +24,7 @@ db.on("error", console.error.bind(console, "MongoDB connection error:"));
 app.use(body_parser.json());
 app.use(body_parser.urlencoded({ extended: true }));
 app.use("/", routes);
-app.use("/pages", express.static("../controllers"));
+app.use("/pages", express.static("."));
 
 app.listen(port, () => {
   console.log("Server on port " + port);

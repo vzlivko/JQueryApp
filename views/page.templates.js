@@ -1,68 +1,65 @@
-"use strict";
-const controllers = require("../controllers/controllers");
+const cookies = document.cookie.split(";");
+function loginForm() {
+  $(document).ready(() => {
+    $("body").append(`<form action='/login' method="post"></form>`);
+    $("form")
+      .append("<h1>Sign in</h1>")
+      .append(`<p>Email`)
+      .append(`<input type='text' required name='email' id='email'>`)
+      .append(`<p>Password`)
+      .append(`<input type='password' required name='password'>`)
+      .append(`<p><input type="submit" value="Log in">`)
+      .append(`<input type='button' id='go_home' value='go to home page'>`);
+    $("#go_home").on("click", () => (location.href = "http://localhost:3220/"));
+  });
+}
 
-const START_OF_PAGE = `
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <link rel="stylesheet" href="style.css" />
-    <title>jQuery App</title>
-  </head>
-  <body>
-`;
-const END_OF_PAGE = `
-<script
-      src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
-      integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
-      crossorigin="anonymous"
-    ></script>
-    <script
-      src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
-      integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
-      crossorigin="anonymous"
-    ></script>
-    <script type="text/javascript" src="page.templates.js"></script>
-  </body>
-</html>
-`;
+function registrationForm() {
+  $(document).ready(() => {
+    $("body").append(`<form action='/sign_up' method="post"></form>`);
+    $("form")
+      .append(`<h1>Registration`)
+      .append(`<p>Email`)
+      .append(`<input type='text' required name='email'>`)
+      .append(`<p>Password`)
+      .append(`<input type='password' required minlength=8 name='password'>`)
+      .append(`<p>Confirm password`)
+      .append(
+        `<input type='password' required minlength=8 name='confirmPassword'>`
+      )
+      .append(`<p>Name`)
+      .append(`<input type='text' name='name'>`)
+      .append(`<p>Birthday`)
+      .append(`<input type='date' name='birthday'>`)
+      .append(`<p><input type="submit" value="Sign up">`)
+      .append(`<input type='button' id='go_home' value='go to home page'>`);
+    $("#go_home").on("click", () => (location.href = "http://localhost:3220/"));
+  });
+}
 
-let middlePartOfPage = `email`;
-let registrationForm = `
-<form action="sign_up" method="POST">
-  <h2>Registration new user</h2>
-  <p>Email</p>
-  <input type="text" required name="email">
-  <p>Password</p>
-  <input type="password" required minlength=8 name="password">
-  <p>Confirm password</p>
-  <input type="password" required minlength=8 name="confirmPassword">
-  <p>Name</p>
-  <input type="text" name="name">
-  <p>Age</p>
-  <input type="date" name="birthday">
-  <p><input type="submit" method="POST" value="Register NOW!">
-  </form>
-`;
+function homePage() {
+  $(document).ready(() => {
+    $("body")
+      .append(`<input type='button' value='Sign up' id='sign_up'>`)
+      .append(`<input type='button' value='Log in' id='login'>`);
+    $("#sign_up").on(
+      "click",
+      () => (location.href = "http://localhost:3220/sign_up")
+    );
+    $("#login").on(
+      "click",
+      () => (location.href = "http://localhost:3220/login")
+    );
+  });
+}
 
-let loginForm = `
-<form action="login" method="post">
-  <h2>Log in</h2>
-  <p>Email</p>
-  <input type="text" required name="email">
-  <p>Password</p>
-  <input type="password" required name="password">
-  <p><input type="submit" method="POST" value="Log in">
-</form>
-`;
+function userHomePage() {
+  $(document).ready(() => {
+    $("body").append(`<h3>Welcome, ${document.cookie}</h3>`);
+  });
+}
 
-exports.template = START_OF_PAGE + middlePartOfPage + END_OF_PAGE;
-
-exports.registration_form = START_OF_PAGE + registrationForm + END_OF_PAGE;
-exports.login_form = START_OF_PAGE + loginForm + END_OF_PAGE;
-
-exports.wrong_password =
-  START_OF_PAGE +
-  registrationForm +
-  `<script>alert('Passwords must be the same')</script>` +
-  END_OF_PAGE;
+if (location.pathname == "/login") loginForm();
+if (location.pathname == "/sign_up") registrationForm();
+if (location.pathname == "/") homePage();
+if (location.pathname == "/users") userHomePage();

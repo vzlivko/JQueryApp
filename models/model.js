@@ -18,7 +18,7 @@ let user = new Schema({
   password: { type: String, required: true, max: 50, min: 8 },
   confirmPassword: { type: String, required: true, max: 50, min: 8 },
   name: { type: String, max: 30 },
-  age: Date,
+  birthday: Date,
   toDoList: [toDoList]
 });
 

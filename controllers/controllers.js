@@ -1,9 +1,12 @@
 const User = require("../models/model");
-const page_template = require("../views/page.templates");
 
-exports.show_homepage = (req, res) => {
-  res.send("homepage");
-};
+function sendPage(req, res) {
+  res.sendFile("/home/user/jQueryApp/views/index.html", err => {
+    if (err) return next(err);
+  });
+}
+
+exports.show_homepage = sendPage;
 
 exports.register_user = (req, res) => {
   function findSameEmail(item) {
@@ -19,10 +22,9 @@ exports.register_user = (req, res) => {
         password: req.body.password,
         confirmPassword: req.body.confirmPassword,
         name: req.body.name,
-        age: req.body.age
+        birthday: req.body.birthday
       });
-      if (user.password != user.confirmPassword)
-        res.send(page_template.wrong_password);
+      if (user.password != user.confirmPassword) res.send("wrong password");
       else
         user.save(err => {
           if (err) return next(err);
@@ -33,20 +35,20 @@ exports.register_user = (req, res) => {
 };
 
 exports.login_user = (req, res) => {
-  User.findOne(
-    { email: req.body.email, password: req.body.password },
-    (err, user) => {
-      if (err) return next(err);
-      if (user) res.send("welcome, " + user.email);
-      else res.send("user with email " + req.body.email + " doesnt exists");
+  let str;
+  User.findOne({ email: req.body.email }, (err, user) => {
+    if (err) return next(err);
+    if (!user) str = `user with email ${req.body.email} doesnt exists`;
+    else {
+      if (user.password == req.body.password) str = `welcome, ${user.email}`;
+      else str = `wrong password`;
     }
-  );
+    res.send(str);
+  });
 };
 
-exports.sign_up_page = (req, res) => {
-  res.send(page_template.registration_form);
-};
+exports.sign_up_page = sendPage;
 
-exports.login_page = (req, res) => {
-  res.send(page_template.login_form);
-};
+exports.login_page = sendPage;
+
+exports.user_page = sendPage;
