@@ -8,18 +8,16 @@ let task = new Schema({
   checked: { type: Boolean, required: true }
 });
 
-let toDoList = new Schema({
-  name: String,
-  task: [task]
-});
-
 let user = new Schema({
   email: { type: String, required: true, max: 50 },
   password: { type: String, required: true, max: 50, min: 8 },
   confirmPassword: { type: String, required: true, max: 50, min: 8 },
   name: { type: String, max: 30 },
   birthday: Date,
-  toDoList: [toDoList]
+  toDoList: new Schema({
+    name: String,
+    task: [task]
+  })
 });
 
 module.exports = mongoose.model("User", user);

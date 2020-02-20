@@ -1,5 +1,6 @@
 "use strict";
 const express = require("express");
+const cookieParser = require("cookie-parser");
 const body_parser = require("body-parser");
 const app = express();
 const mongoose = require("mongoose");
@@ -25,6 +26,7 @@ app.use(body_parser.json());
 app.use(body_parser.urlencoded({ extended: true }));
 app.use("/", routes);
 app.use("/pages", express.static("."));
+app.use(cookieParser());
 
 app.listen(port, () => {
   console.log("Server on port " + port);
