@@ -53,7 +53,11 @@ exports.login_user = async (req, res) => {
     if (loggedUser.password == password) {
       res.cookie("user", email);
       res.cookie("logged_in", true);
-      res.status(200).send(`welcome, ${email}`);
+      res
+        .status(200)
+        .send(
+          `welcome, ${email} <input type='button' value='Home' onclick='location.href="/"'>`
+        );
     } else res.status(409).send("Wrong password");
   } else {
     res.status(409).send(`User with email "${email}" doesnt exists`);
